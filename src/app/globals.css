@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  /* Paleta "carta à luz de vela": vinho profundo como base, rosa-lacre e
+     dourado como os dois acentos que se cruzam — sem cair no combo
+     "fundo quase-preto + um único neon" nem no cream+terracota padrão. */
+  --ink: #1c0f16;
+  --wine: #341726;
+  --wine-soft: #4a2135;
+  --rose: #e8536b;
+  --rose-soft: #f2879a;
+  --gold: #d8a657;
+  --paper: #f7ecdf;
+  --muted: #c9a3ac;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-wine: var(--wine);
+  --color-wine-soft: var(--wine-soft);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --color-gold: var(--gold);
+  --color-paper: var(--paper);
+  --color-muted: var(--muted);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+}
+
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-body), sans-serif;
+}
+
+@keyframes story-progress-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes story-slide-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-420px) scale(1.15);
+    opacity: 0;
+  }
+}
