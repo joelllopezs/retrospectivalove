@@ -69,6 +69,18 @@ function StatCard({
   );
 }
 
+function LoveSentence({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <p className="mt-2 font-body text-xs leading-relaxed text-muted">
+      {children}
+    </p>
+  );
+}
+
 function PhotoGallery({
   photos,
 }: {
@@ -250,6 +262,91 @@ function EmojiRankingList({
   );
 }
 
+function AwardsSection({
+  awards,
+}: {
+  awards: AnalysisResult["awards"];
+}) {
+  const items = [
+    {
+      icon: "💬",
+      title: "Conversador oficial",
+      description:
+        "Quem mais esteve presente nessa história",
+      value: awards.talker,
+    },
+    {
+      icon: "❤️",
+      title: "Coração da relação",
+      description:
+        "Quem mais demonstrou carinho por aqui",
+      value: awards.romantic,
+    },
+    {
+      icon: "🌙",
+      title: "Companheiro(a) da madrugada",
+      description:
+        "Quem mais apareceu nas conversas noturnas",
+      value: awards.nightOwl,
+    },
+  ];
+
+  const available = items.filter(
+    (item) => item.value
+  );
+
+  if (available.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl bg-wine/40 p-6">
+
+      <p className="font-display text-lg italic text-paper">
+        🏆 Momentos especiais
+      </p>
+
+      <div className="mt-4 space-y-3">
+
+        {available.map((item) => (
+          <div
+            key={item.title}
+            className="rounded-xl bg-ink/30 p-4"
+          >
+
+            <div className="flex items-start gap-3">
+
+              <span className="text-2xl">
+                {item.icon}
+              </span>
+
+              <div>
+
+                <p className="font-display text-lg text-paper">
+                  {item.title}
+                </p>
+
+                <p className="mt-1 font-body text-xs text-muted">
+                  {item.description}
+                </p>
+
+                <p className="mt-2 font-display text-xl text-gold">
+                  {item.value}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+        ))}
+
+      </div>
+
+    </div>
+  );
+}
+
 export function Statistics({
   result,
   photos,
@@ -301,54 +398,80 @@ export function Statistics({
         </p>
       )}
 
-      <div className="mt-8 grid grid-cols-2 gap-3">
+      <div className="mt-8 space-y-4">
 
-        <StatCard
-          value={
-            <CountUpNumber
-              value={
-                result.overview.totalMessages
-              }
-            />
-          }
-          label="mensagens"
+  <div className="rounded-3xl bg-wine/50 p-6 text-center">
+
+    <p className="font-display text-5xl text-gold">
+      <CountUpNumber
+        value={result.overview.totalMessages}
+      />
+    </p>
+
+    <p className="mt-2 font-display text-xl text-paper">
+      mensagens
+    </p>
+
+    <LoveSentence>
+      Conversas que construíram a história de vocês.
+    </LoveSentence>
+
+  </div>
+
+
+  <div className="grid grid-cols-2 gap-3">
+
+    <div className="rounded-2xl bg-wine/50 p-5 text-center">
+
+      <p className="font-display text-3xl text-gold">
+        <CountUpNumber
+          value={result.overview.totalDays}
         />
+      </p>
 
-        <StatCard
-          value={
-            <CountUpNumber
-              value={
-                result.overview.totalDays
-              }
-            />
-          }
-          label="dias conversando"
-        />
+      <p className="mt-1 font-body text-xs text-muted">
+        dias juntos nessa jornada
+      </p>
 
-        <StatCard
-          value={
-            <>
-              <CountUpNumber
-                value={heartsTotal}
-              />{" "}
-              ❤️
-            </>
-          }
-          label="corações enviados"
-        />
+    </div>
 
-        <StatCard
-          value={
-            <CountUpNumber
-              value={
-                declarationsTotal
-              }
-            />
-          }
-          label="declarações de amor"
-        />
 
-      </div>
+    <div className="rounded-2xl bg-wine/50 p-5 text-center">
+
+      <p className="font-display text-3xl text-gold">
+        <CountUpNumber
+          value={heartsTotal}
+        /> ❤️
+      </p>
+
+      <p className="mt-1 font-body text-xs text-muted">
+        pequenos gestos de carinho
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div className="rounded-3xl bg-wine/50 p-6 text-center">
+
+    <p className="font-display text-4xl text-gold">
+      <CountUpNumber
+        value={declarationsTotal}
+      />
+    </p>
+
+    <p className="mt-2 font-display text-xl text-paper">
+      declarações de amor
+    </p>
+
+    <LoveSentence>
+      Palavras que fizeram parte da história de vocês.
+    </LoveSentence>
+
+  </div>
+
+</div>
 
       <PhotoGallery photos={photos} />
 
@@ -420,7 +543,9 @@ export function Statistics({
 
       </div>
 
-
+<AwardsSection
+  awards={result.awards}
+/>
       <div className="mt-8 space-y-4">
 
         {showShare && story && (

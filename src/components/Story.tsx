@@ -39,8 +39,8 @@ interface SlideDef {
   id: string;
 
   /**
-   * Tempo até avançar automaticamente.
-   * null = permanece no slide até o usuário interagir.
+   * Tempo atÃ© avanÃ§ar automaticamente.
+   * null = permanece no slide atÃ© o usuÃ¡rio interagir.
    */
   duration: number | null;
 
@@ -126,7 +126,7 @@ function buildSlides(
       slides.push({
         id: `quiz-${question.id}`,
 
-        // Aguarda o usuário responder.
+        // Aguarda o usuÃ¡rio responder.
         duration: null,
 
         render: () => (
@@ -188,8 +188,8 @@ export function Story({
   photos: PhotoMoment[];
 
   /**
-   * Opcional para não quebrar telas que ainda
-   * não enviam uma data de início.
+   * Opcional para nÃ£o quebrar telas que ainda
+   * nÃ£o enviam uma data de inÃ­cio.
    */
   relationshipStart?: Date | null;
 
@@ -242,9 +242,9 @@ export function Story({
   }, []);
 
   /**
-   * Avanço automático.
+   * AvanÃ§o automÃ¡tico.
    *
-   * O timer é recriado toda vez que o slide muda.
+   * O timer Ã© recriado toda vez que o slide muda.
    */
   useEffect(() => {
     const currentSlide = slides[index];
@@ -274,7 +274,7 @@ export function Story({
   ]);
 
   /**
-   * Navegação pelo teclado.
+   * NavegaÃ§Ã£o pelo teclado.
    */
   useEffect(() => {
     function handleKey(
@@ -311,10 +311,10 @@ export function Story({
 
   /**
    * Verifica se o clique aconteceu em algum elemento
-   * que possui interação própria.
+   * que possui interaÃ§Ã£o prÃ³pria.
    *
-   * Isso é especialmente importante para o Quiz,
-   * evitando que clicar em uma resposta também
+   * Isso Ã© especialmente importante para o Quiz,
+   * evitando que clicar em uma resposta tambÃ©m
    * avance o Story.
    */
   const isInteractiveElement = (
@@ -341,10 +341,10 @@ export function Story({
   };
 
   /**
-   * Navegação semelhante aos Stories.
+   * NavegaÃ§Ã£o semelhante aos Stories.
    *
    * 35% da esquerda = voltar.
-   * restante = avançar.
+   * restante = avanÃ§ar.
    */
   const handleContainerClick = (
     event: MouseEvent<HTMLDivElement>
@@ -370,7 +370,7 @@ export function Story({
   };
 
   /**
-   * Guarda a posição inicial do toque.
+   * Guarda a posiÃ§Ã£o inicial do toque.
    */
   const handleTouchStart = (
     event: TouchEvent<HTMLDivElement>
@@ -387,7 +387,7 @@ export function Story({
   /**
    * Detecta swipe horizontal.
    *
-   * Também verifica o movimento vertical para
+   * TambÃ©m verifica o movimento vertical para
    * evitar trocar de slide durante um scroll.
    */
   const handleTouchEnd = (
@@ -416,7 +416,7 @@ export function Story({
 
     /**
      * Movimento predominantemente vertical.
-     * Não interpreta como swipe.
+     * NÃ£o interpreta como swipe.
      */
     if (
       Math.abs(deltaY) >
@@ -467,7 +467,7 @@ export function Story({
         )}
 
         {/* ================================================= */}
-        {/* FUNDO PADRÃO                                      */}
+        {/* FUNDO PADRÃƒO                                      */}
         {/* ================================================= */}
 
         {!backgroundPhotoUrl && (
@@ -594,7 +594,7 @@ export function Story({
         </div>
 
         {/* ================================================= */}
-        {/* ÁUDIO                                             */}
+        {/* ÃUDIO                                             */}
         {/* ================================================= */}
 
         <div
@@ -615,11 +615,11 @@ export function Story({
           data-story-interactive
           className="absolute right-3 top-7 z-40 flex h-8 w-8 items-center justify-center rounded-full bg-black/30 font-body text-lg text-paper backdrop-blur-md transition duration-200 hover:scale-110 hover:bg-black/50 active:scale-95"
         >
-          ×
+          Ã—
         </button>
 
         {/* ================================================= */}
-        {/* CONTEÚDO                                          */}
+        {/* CONTEÃšDO                                          */}
         {/* ================================================= */}
 
         <div
@@ -664,7 +664,7 @@ export function Story({
         />
 
         {/* ================================================= */}
-        {/* ANIMAÇÕES LOCAIS                                  */}
+        {/* ANIMAÃ‡Ã•ES LOCAIS                                  */}
         {/* ================================================= */}
 
         <style jsx global>{`
