@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+
 import { UploadConversation } from "@/components/UploadConversation";
 import { RelationshipStartForm } from "@/components/RelationshipStartForm";
 import { Processing } from "@/components/Processing";
@@ -14,7 +15,11 @@ import {
   type PhotoMoment,
 } from "@/lib/photos";
 
+import { createStory } from "@/lib/story/createStory";
+import { saveStory } from "@/lib/storage/storyStorage";
+
 import type { AnalysisResult } from "@/types/analysis";
+import type { StoryData } from "@/types/story";
 
 type Stage =
   | "upload"
@@ -40,16 +45,12 @@ export default function Home() {
   const [photos, setPhotos] =
     useState<PhotoMoment[]>([]);
 
+  const [story, setStory] =
+    useState<StoryData | null>(null);
+
   const [isStoryOpen, setIsStoryOpen] =
     useState(false);
 
-  /**
-   * Informações do relacionamento.
-   *
-   * Por enquanto usamos a data no contador.
-   * Depois também poderemos usar o tipo
-   * (namoro/casamento) na retrospectiva.
-   */
   const [
     relationshipData,
     setRelationshipData,
@@ -57,10 +58,6 @@ export default function Home() {
     null
   );
 
-  /**
-   * Libera a memória dos object URLs
-   * das fotos se o usuário fechar a página.
-   */
   useEffect(() => {
     return () => {
       revokePhotoMoments(photos);
@@ -69,13 +66,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Arquivo ZIP/TXT selecionado.
-   *
-   * Antes de processar a conversa,
-   * mostramos a tela perguntando
-   * quando começou o relacionamento.
-   */
   const handleFileAccepted = (
     selected: File
   ) => {
@@ -84,10 +74,6 @@ export default function Home() {
     setStage("relationship");
   };
 
-  /**
-   * Usuário informou namoro/casamento
-   * e a data de início.
-   */
   const handleRelationshipComplete = (
     data: RelationshipData
   ) => {
@@ -97,12 +83,25 @@ export default function Home() {
   };
 
   /**
-   * Análise da conversa concluída.
+   * Finalização da análise.
+   *
+   * Cria a história e salva para
+   * futuramente gerar o link público.
    */
   const handleComplete = (
     analysis: AnalysisResult,
     newPhotos: PhotoMoment[]
   ) => {
+    const newStory = createStory(
+      analysis,
+      newPhotos,
+      relationshipData
+    );
+
+    saveStory(newStory);
+
+    setStory(newStory);
+
     setResult(analysis);
 
     setPhotos(newPhotos);
@@ -110,13 +109,6 @@ export default function Home() {
     setStage("done");
   };
 
-  /**
-   * Volta tudo ao início.
-   *
-   * Também apaga a data do relacionamento
-   * para evitar misturar uma nova conversa
-   * com os dados anteriores.
-   */
   const handleReset = () => {
     revokePhotoMoments(photos);
 
@@ -128,12 +120,13 @@ export default function Home() {
 
     setPhotos([]);
 
+    setStory(null);
+
     setRelationshipData(null);
 
     setIsStoryOpen(false);
   };
-
-  return (
+    return (
     <main className="relative flex flex-1 items-center justify-center overflow-hidden px-6 py-16">
 
       {/* ================================================= */}
@@ -155,16 +148,23 @@ export default function Home() {
 
       {stage === "done" && result ? (
         <div className="relative">
+
           <Statistics
             result={result}
             photos={photos}
+            story={story}
+            showShare={true}
             onReset={handleReset}
             onOpenStory={() =>
               setIsStoryOpen(true)
-            }
-          />
+          }
+        />
+
+
+
         </div>
       ) : (
+
         /* ================================================= */
         /* FLUXO INICIAL                                     */
         /* ================================================= */
@@ -209,10 +209,9 @@ export default function Home() {
               {/* DATA DO RELACIONAMENTO                        */}
               {/* ============================================= */}
 
-              {stage ===
-                "relationship" &&
+              {stage === "relationship" &&
                 file && (
-                  <div className="rounded-[26px] bg-ink/40 p-6 backdrop-blur-sm">
+                  <div className="rounded-[26px] bg-ink/40 p-6 backdropBlur-sm">
 
                     <RelationshipStartForm
                       onComplete={
@@ -220,7 +219,6 @@ export default function Home() {
                       }
                     />
 
-                    {/* Permite escolher outro arquivo */}
                     <button
                       type="button"
                       onClick={() => {
@@ -239,6 +237,7 @@ export default function Home() {
                       ← Escolher outro
                       arquivo
                     </button>
+
                   </div>
                 )}
 
@@ -246,8 +245,7 @@ export default function Home() {
               {/* PROCESSAMENTO                                 */}
               {/* ============================================= */}
 
-              {stage ===
-                "processing" &&
+              {stage === "processing" &&
                 file && (
                   <Processing
                     file={file}
@@ -259,6 +257,7 @@ export default function Home() {
                     }
                   />
                 )}
+
             </div>
           </div>
 
@@ -278,18 +277,16 @@ export default function Home() {
             </p>
           )}
 
-          {stage ===
-            "relationship" && (
-              <p className="mx-auto mt-6 max-w-sm text-center font-body text-sm text-muted">
-                ❤️ Essa data será
-                usada para mostrar há
-                quanto tempo vocês
-                estão juntos.
-              </p>
-            )}
+          {stage === "relationship" && (
+            <p className="mx-auto mt-6 max-w-sm text-center font-body text-sm text-muted">
+              ❤️ Essa data será
+              usada para mostrar há
+              quanto tempo vocês
+              estão juntos.
+            </p>
+          )}
 
-          {stage ===
-            "processing" &&
+          {stage === "processing" &&
             relationshipData && (
               <p className="mx-auto mt-6 max-w-sm text-center font-body text-sm text-muted">
                 {relationshipData.type ===
@@ -298,6 +295,7 @@ export default function Home() {
                   : "💍 Preparando a retrospectiva do casamento..."}
               </p>
             )}
+
         </div>
       )}
 
@@ -330,6 +328,7 @@ export default function Home() {
             onReset={handleReset}
           />
         )}
+
     </main>
   );
 }
