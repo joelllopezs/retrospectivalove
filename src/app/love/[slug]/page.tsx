@@ -30,13 +30,26 @@ export default function LoveStoryPage({
   const [loaded, setLoaded] =
     useState(false);
 
-  useEffect(() => {
-    const savedStory = getStory(slug);
+useEffect(() => {
+
+  async function loadStory() {
+
+    const savedStory =
+      await getStory(slug);
+
 
     setStory(savedStory);
 
+
     setLoaded(true);
-  }, [slug]);
+
+  }
+
+
+  loadStory();
+
+
+}, [slug]);
 
 
   if (!loaded) {

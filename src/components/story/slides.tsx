@@ -945,14 +945,7 @@ export function AwardsSlide({ result }: { result: AnalysisResult }) {
       winner: `${formatNumber(heartsTotal(result))} corações`,
       detail: "Pequenos símbolos que marcaram a conversa de vocês.",
     },
-    {
-      icon: "🔥",
-      title: "Maior sequência",
-      winner: result.messages.longestStreak
-        ? `${formatNumber(result.messages.longestStreak.length)} dias`
-        : "Sem sequência",
-      detail: "Uma prova de constância e conexão.",
-    },
+    
   ];
 
   return (
@@ -966,12 +959,12 @@ export function AwardsSlide({ result }: { result: AnalysisResult }) {
           <Reveal key={title} delay={220 + i * 160}>
             <div className="story-award-card story-glass-card rounded-2xl px-4 py-4 text-left">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-wine/60 text-2xl">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-wine/60 text-2xl">
                   {icon}
                 </div>
 
                 <div>
-                  <p className="font-body text-[11px] uppercase tracking-[0.12em] text-muted">
+                  <p className="font-body text-[8px] uppercase tracking-[0.12em] text-muted">
                     {title}
                   </p>
 
@@ -981,7 +974,7 @@ export function AwardsSlide({ result }: { result: AnalysisResult }) {
                 </div>
               </div>
 
-              <p className="mt-3 font-body text-xs leading-relaxed text-muted">
+              <p className="mt-2 font-body text-xs leading-relaxed text-muted">
                 {detail}
               </p>
             </div>

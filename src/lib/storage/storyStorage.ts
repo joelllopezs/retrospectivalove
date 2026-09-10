@@ -1,105 +1,90 @@
 import type { StoryData } from "@/types/story";
 
-const STORAGE_KEY = "love-wrapped-stories";
-
 /**
- * Recupera todas as histórias salvas no navegador.
- */
-function getStories(): StoryData[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  const raw = localStorage.getItem(STORAGE_KEY);
-
-  if (!raw) {
-    return [];
-  }
-
-  try {
-    return JSON.parse(raw) as StoryData[];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Salva uma história.
+ * Salva uma história através da API do servidor.
  *
- * Por enquanto usa localStorage.
- * Depois podemos trocar internamente por Neon
- * sem alterar quem chama essa função.
+ * O token do Vercel Blob nunca vai para o navegador.
  */
-export function saveStory(
+export async function saveStory(
   story: StoryData
-): void {
-  if (typeof window === "undefined") {
-    return;
+): Promise<void> {
+  const response = await fetch("/api/story", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(story),
+  });
+
+  if (!response.ok) {
+    const data = await response
+      .json()
+      .catch(() => null);
+
+    throw new Error(
+      data?.error ??
+        "Não foi possível salvar a história."
+    );
   }
-
-  const stories = getStories();
-
-  const existingIndex = stories.findIndex(
-    (item) => item.slug === story.slug
-  );
-
-  if (existingIndex >= 0) {
-    stories[existingIndex] = story;
-  } else {
-    stories.push(story);
-  }
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(stories)
-  );
 }
 
 /**
  * Busca uma história pelo slug.
- *
- * Ex:
- * getStory("joao-ana-x82k")
  */
-export function getStory(
+export async function getStory(
   slug: string
-): StoryData | null {
-  const stories = getStories();
+): Promise<StoryData | null> {
+  try {
+    const response = await fetch(
+      `/api/story/${encodeURIComponent(slug)}`,
+      {
+        cache: "no-store",
+      }
+    );
 
-  return (
-    stories.find(
-      (story) => story.slug === slug
-    ) ?? null
-  );
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        "Não foi possível carregar a história."
+      );
+    }
+
+    return (await response.json()) as StoryData;
+  } catch (error) {
+    console.error(
+      "Erro ao carregar história:",
+      error
+    );
+
+    return null;
+  }
 }
 
 /**
  * Remove uma história.
  */
-export function deleteStory(
+export async function deleteStory(
   slug: string
-): void {
-  if (typeof window === "undefined") {
-    return;
+): Promise<void> {
+  const response = await fetch(
+    `/api/story/${encodeURIComponent(slug)}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Não foi possível remover a história."
+    );
   }
-
-  const stories = getStories();
-
-  const filtered = stories.filter(
-    (story) => story.slug !== slug
-  );
-
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(filtered)
-  );
 }
 
 /**
- * Gera a URL pública da história.
- *
- * Futuramente será o link enviado
- * para a pessoa presenteada.
+ * Gera a URL pública da retrospectiva.
  */
 export function getStoryUrl(
   story: StoryData
