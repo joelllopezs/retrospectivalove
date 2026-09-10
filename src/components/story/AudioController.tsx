@@ -1,175 +1,703 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent, type MouseEvent } from "react";
-import { startAmbientSound, stopAmbientSound } from "@/lib/audio/ambientSound";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MouseEvent,
+} from "react";
+
+import {
+  startAmbientSound,
+  stopAmbientSound,
+} from "@/lib/audio/ambientSound";
+
 
 interface Track {
   title: string;
+  artist?: string;
   src: string;
 }
 
-type SourceKind = "ambient" | "playlist" | "custom";
 
-/**
- * Música de fundo do Story. Três fontes possíveis:
- *  1. "Ambiente" — som gerado por código (ver lib/audio/ambientSound.ts), toca
- *     por padrão sem precisar de nenhum arquivo. Sem questão de direito autoral.
- *  2. Playlist local — o que você mesmo montar em public/audio/playlist.json
- *     + public/audio/playlist/*.mp3 (royalty-free/CC que você escolher).
- *  3. Upload na hora — a pessoa vendo a retrospectiva pode enviar uma música
- *     do próprio aparelho; fica só na memória da sessão dela.
- */
-export function AudioController() {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [playlist, setPlaylist] = useState<Track[]>([]);
-  const [customTrack, setCustomTrack] = useState<Track | null>(null);
-  const [trackIndex, setTrackIndex] = useState(0);
-  const [sourceKind, setSourceKind] = useState<SourceKind>("ambient");
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+type SourceKind =
+  | "ambient"
+  | "playlist"
+  | "custom";
 
+
+
+interface AudioControllerProps {
+  autoPlay?: boolean;
+}
+
+
+
+export function AudioController({
+  autoPlay = false,
+}: AudioControllerProps) {
+
+
+  const audioRef =
+    useRef<HTMLAudioElement | null>(null);
+
+
+  const [playlist, setPlaylist] =
+    useState<Track[]>([]);
+
+
+  const [customTrack, setCustomTrack] =
+    useState<Track | null>(null);
+
+
+  const [trackIndex, setTrackIndex] =
+    useState(0);
+
+
+  const [sourceKind, setSourceKind] =
+    useState<SourceKind>("playlist");
+
+
+  const [isPlaying, setIsPlaying] =
+    useState(autoPlay);
+
+
+  const [isPanelOpen, setIsPanelOpen] =
+    useState(false);
+
+
+
+  /**
+   * Carrega playlist local
+   */
   useEffect(() => {
+
     fetch("/audio/playlist.json")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setPlaylist(Array.isArray(data) ? data : []))
-      .catch(() => setPlaylist([]));
-  }, []);
+      .then((res) =>
+        res.ok
+          ? res.json()
+          : []
+      )
+      .then((data) => {
 
-  // Libera o object URL da faixa enviada pelo usuário, e desliga o ambiente, ao desmontar.
+        const tracks =
+          Array.isArray(data)
+            ? data
+            : [];
+
+
+        setPlaylist(tracks);
+
+
+        if (
+          tracks.length > 0 &&
+          autoPlay
+        ) {
+          setSourceKind("playlist");
+          setTrackIndex(0);
+          setIsPlaying(true);
+        }
+
+      })
+      .catch(() => {
+
+        setPlaylist([]);
+
+      });
+
+  }, [autoPlay]);
+
+
+
+
+  /**
+   * Limpeza
+   */
   useEffect(() => {
+
     return () => {
+
       stopAmbientSound();
-      if (customTrack) URL.revokeObjectURL(customTrack.src);
+
+
+      if (customTrack) {
+        URL.revokeObjectURL(
+          customTrack.src
+        );
+      }
+
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
+
+
   const activeTrack: Track | null =
-    sourceKind === "custom" ? customTrack : sourceKind === "playlist" ? (playlist[trackIndex] ?? null) : null;
 
-  // Único lugar que efetivamente toca/pausa — reage a qualquer troca de fonte/faixa.
+    sourceKind === "custom"
+      ? customTrack
+
+      : sourceKind === "playlist"
+        ? (
+            playlist[trackIndex]
+            ?? null
+          )
+
+        : null;
+
+
+
+
+  /**
+   * Controle real de áudio
+   */
   useEffect(() => {
+
+
     if (!isPlaying) {
+
       stopAmbientSound();
+
       audioRef.current?.pause();
+
       return;
+
     }
 
-    if (sourceKind === "ambient") {
+
+
+    if (
+      sourceKind === "ambient"
+    ) {
+
       audioRef.current?.pause();
-      startAmbientSound();
-    } else {
-      stopAmbientSound();
-      const audio = audioRef.current;
-      if (audio && activeTrack) {
-        audio.load();
-        audio.play().catch(() => setIsPlaying(false));
-      } else {
-        setIsPlaying(false);
-      }
-    }
-  }, [isPlaying, sourceKind, activeTrack]);
 
-  function stop(event: MouseEvent) {
+      startAmbientSound();
+
+      return;
+
+    }
+
+
+
+    stopAmbientSound();
+
+
+
+    const audio =
+      audioRef.current;
+
+
+
+    if (
+      audio &&
+      activeTrack
+    ) {
+
+      audio.load();
+
+
+      audio
+        .play()
+        .catch(() => {
+
+          setIsPlaying(false);
+
+        });
+
+
+    } else {
+
+      setIsPlaying(false);
+
+    }
+
+
+  }, [
+    isPlaying,
+    sourceKind,
+    activeTrack,
+  ]);
+
+
+
+
+
+  function stop(
+    event: MouseEvent
+  ) {
+
     event.stopPropagation();
+
   }
 
-  const togglePanel = (event: MouseEvent<HTMLButtonElement>) => {
+
+
+
+
+  const togglePanel = (
+    event: MouseEvent<HTMLButtonElement>
+  ) => {
+
     stop(event);
-    setIsPanelOpen((open) => !open);
+
+    setIsPanelOpen(
+      (open) => !open
+    );
+
   };
 
-  const togglePlay = (event: MouseEvent<HTMLButtonElement>) => {
+
+
+
+  const togglePlay = (
+    event: MouseEvent<HTMLButtonElement>
+  ) => {
+
     stop(event);
-    setIsPlaying((playing) => !playing);
+
+    setIsPlaying(
+      (playing) => !playing
+    );
+
   };
 
-  const selectAmbient = (event: MouseEvent<HTMLButtonElement>) => {
+
+
+
+  const selectAmbient = (
+    event: MouseEvent<HTMLButtonElement>
+  ) => {
+
     stop(event);
-    setSourceKind("ambient");
+
+    setSourceKind(
+      "ambient"
+    );
+
+    setIsPlaying(true);
+
   };
 
-  const selectPlaylistTrack = (event: MouseEvent<HTMLButtonElement>, i: number) => {
+
+
+
+  const selectPlaylistTrack = (
+    event: MouseEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+
     stop(event);
-    setSourceKind("playlist");
-    setTrackIndex(i);
+
+    setTrackIndex(index);
+
+    setSourceKind(
+      "playlist"
+    );
+
+    setIsPlaying(true);
+
   };
 
-  const selectCustom = (event: MouseEvent<HTMLButtonElement>) => {
+
+
+
+  const selectCustom = (
+    event: MouseEvent<HTMLButtonElement>
+  ) => {
+
     stop(event);
-    if (customTrack) setSourceKind("custom");
+
+
+    if (customTrack) {
+
+      setSourceKind(
+        "custom"
+      );
+
+      setIsPlaying(true);
+
+    }
+
   };
 
-  const handleUpload = (event: ChangeEvent<HTMLInputElement>) => {
+
+
+
+  const handleUpload = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+
+
     event.stopPropagation();
-    const file = event.target.files?.[0];
+
+
+    const file =
+      event.target.files?.[0];
+
+
     if (!file) return;
-    if (customTrack) URL.revokeObjectURL(customTrack.src);
-    setCustomTrack({ title: file.name.replace(/\.[^.]+$/, ""), src: URL.createObjectURL(file) });
-    setSourceKind("custom");
+
+
+
+    if (customTrack) {
+
+      URL.revokeObjectURL(
+        customTrack.src
+      );
+
+    }
+
+
+
+    setCustomTrack({
+
+      title:
+        file.name.replace(
+          /\.[^/.]+$/,
+          ""
+        ),
+
+      src:
+        URL.createObjectURL(
+          file
+        ),
+
+    });
+
+
+
+    setSourceKind(
+      "custom"
+    );
+
+
+    setIsPlaying(true);
+
   };
+
+
+
+
 
   const sourceLabel =
-    sourceKind === "ambient" ? "🎼 Som ambiente" : activeTrack ? activeTrack.title : "Nenhuma música ainda";
 
-  function pillClass(active: boolean) {
-    return `rounded-full border px-3 py-1.5 font-body text-[11px] transition-colors ${
-      active ? "border-gold bg-gold/15 text-paper" : "border-paper/20 text-muted"
-    }`;
+    sourceKind === "ambient"
+
+      ? "🎼 Som ambiente"
+
+      :
+
+    activeTrack
+
+      ? activeTrack.title
+
+      :
+
+        "Nenhuma música";
+
+
+
+
+
+  function pillClass(
+    active:boolean
+  ) {
+
+    return `
+      rounded-full
+      border
+      px-3
+      py-1.5
+      font-body
+      text-[11px]
+      transition-colors
+
+      ${
+        active
+          ? "border-gold bg-gold/15 text-paper"
+          : "border-paper/20 text-muted"
+      }
+    `;
+
   }
 
+
+
+
   return (
-    <div className="absolute left-3 top-7 z-10" onClick={stop}>
-      <audio ref={audioRef} src={activeTrack?.src} onEnded={() => setIsPlaying(false)} />
+
+    <div
+      className="
+        absolute
+        left-3
+        top-7
+        z-10
+      "
+      onClick={stop}
+    >
+
+
+      <audio
+        ref={audioRef}
+        src={
+          activeTrack?.src
+        }
+        onEnded={() =>
+          setIsPlaying(false)
+        }
+      />
+
+
 
       <button
+
         type="button"
-        onClick={togglePanel}
+
+        onClick={
+          togglePanel
+        }
+
         aria-label="Música"
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-base text-paper"
+
+        className="
+          flex
+          h-8
+          w-8
+          items-center
+          justify-center
+          rounded-full
+          bg-black/30
+          text-base
+          text-paper
+        "
+
       >
-        {isPlaying ? "🔊" : "🎵"}
+
+        {
+          isPlaying
+            ? "🔊"
+            : "🎵"
+        }
+
       </button>
 
-      {isPanelOpen && (
-        <div className="mt-2 w-56 rounded-2xl bg-ink/95 p-3 shadow-xl ring-1 ring-paper/10">
-          <p className="truncate font-body text-xs text-paper">{sourceLabel}</p>
 
-          <button
-            type="button"
-            onClick={togglePlay}
-            className="mt-2 rounded-full bg-rose px-3 py-1 font-body text-xs text-paper"
+
+
+      {
+        isPanelOpen && (
+
+          <div
+            className="
+              mt-2
+              w-56
+              rounded-2xl
+              bg-ink/95
+              p-3
+              shadow-xl
+              ring-1
+              ring-paper/10
+            "
           >
-            {isPlaying ? "Pausar" : "Tocar"}
-          </button>
 
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <button type="button" onClick={selectAmbient} className={pillClass(sourceKind === "ambient")}>
-              🎼 Ambiente
+            <p
+              className="
+                truncate
+                font-body
+                text-xs
+                text-paper
+              "
+            >
+              {sourceLabel}
+            </p>
+
+
+
+            <button
+
+              type="button"
+
+              onClick={
+                togglePlay
+              }
+
+              className="
+                mt-2
+                rounded-full
+                bg-rose
+                px-3
+                py-1
+                font-body
+                text-xs
+                text-paper
+              "
+
+            >
+
+              {
+                isPlaying
+                  ? "Pausar"
+                  : "Tocar"
+              }
+
             </button>
-            {playlist.map((track, i) => (
+
+
+
+
+            <div
+              className="
+                mt-3
+                flex
+                flex-wrap
+                gap-1.5
+              "
+            >
+
+
               <button
-                key={track.src}
+
                 type="button"
-                onClick={(event) => selectPlaylistTrack(event, i)}
-                className={pillClass(sourceKind === "playlist" && trackIndex === i)}
+
+                onClick={
+                  selectAmbient
+                }
+
+                className={
+                  pillClass(
+                    sourceKind === "ambient"
+                  )
+                }
+
               >
-                {track.title}
+
+                🎼 Ambiente
+
               </button>
-            ))}
-            {customTrack && (
-              <button type="button" onClick={selectCustom} className={pillClass(sourceKind === "custom")}>
-                {customTrack.title}
-              </button>
-            )}
+
+
+
+
+              {
+                playlist.map(
+                  (track, index) => (
+
+                    <button
+
+                      key={
+                        track.src
+                      }
+
+                      type="button"
+
+                      onClick={
+                        (event) =>
+                          selectPlaylistTrack(
+                            event,
+                            index
+                          )
+                      }
+
+                      className={
+                        pillClass(
+                          sourceKind === "playlist"
+                          &&
+                          trackIndex === index
+                        )
+                      }
+
+                    >
+
+                      {track.title}
+
+                    </button>
+
+                  )
+                )
+              }
+
+
+
+
+              {
+                customTrack && (
+
+                  <button
+
+                    type="button"
+
+                    onClick={
+                      selectCustom
+                    }
+
+                    className={
+                      pillClass(
+                        sourceKind === "custom"
+                      )
+                    }
+
+                  >
+
+                    {customTrack.title}
+
+                  </button>
+
+                )
+              }
+
+
+            </div>
+
+
+
+
+            <label
+              className="
+                mt-3
+                block
+                cursor-pointer
+                text-center
+                font-body
+                text-xs
+                text-gold
+                underline
+              "
+            >
+
+              📤 Enviar sua música
+
+
+              <input
+
+                type="file"
+
+                accept="audio/*"
+
+                className="sr-only"
+
+                onChange={
+                  handleUpload
+                }
+
+              />
+
+
+            </label>
+
+
+
           </div>
 
-          <label className="mt-3 block cursor-pointer text-center font-body text-xs text-gold underline decoration-gold/40 underline-offset-4">
-            📤 Enviar sua música
-            <input type="file" accept="audio/*" className="sr-only" onChange={handleUpload} />
-          </label>
-        </div>
-      )}
+        )
+      }
+
+
     </div>
+
   );
+
 }

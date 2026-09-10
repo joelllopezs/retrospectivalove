@@ -30,18 +30,18 @@ import {
 } from "@/components/story/QuizSlides";
 
 import { buildQuizQuestions } from "@/lib/quiz";
+
 import { AudioController } from "@/components/story/AudioController";
 
 import type { AnalysisResult } from "@/types/analysis";
+
 import type { PhotoMoment } from "@/lib/photos";
+
+
 
 interface SlideDef {
   id: string;
 
-  /**
-   * Tempo atÃ© avanÃ§ar automaticamente.
-   * null = permanece no slide atÃ© o usuÃ¡rio interagir.
-   */
   duration: number | null;
 
   render: (
@@ -50,686 +50,1128 @@ interface SlideDef {
   ) => React.ReactNode;
 }
 
+
+
 function buildSlides(
   result: AnalysisResult,
   photos: PhotoMoment[],
-  relationshipStart: Date | null
+  relationshipStart: Date | null,
+  onReset: () => void
 ): SlideDef[] {
+
+
   const slides: SlideDef[] = [
+
     {
       id: "cover",
+
       duration: 3500,
-      render: (r) => <CoverSlide result={r} />,
+
+      render: (r) => (
+        <CoverSlide result={r} />
+      ),
     },
+
   ];
 
+
+
   if (relationshipStart) {
+
     slides.push({
+
       id: "counter",
+
       duration: 6000,
+
       render: () => (
-        <CounterSlide startDate={relationshipStart} />
+
+        <CounterSlide
+          startDate={relationshipStart}
+        />
+
       ),
+
     });
+
   }
 
+
+
+
+
   slides.push(
+
     {
+
       id: "overview",
+
       duration: 5000,
-      render: (r) => <OverviewSlide result={r} />,
+
+      render: (r) => (
+
+        <OverviewSlide
+          result={r}
+        />
+
+      ),
+
     },
 
+
     {
+
       id: "talker",
+
       duration: 5000,
-      render: (r) => <TalkerSlide result={r} />,
+
+      render: (r) => (
+
+        <TalkerSlide
+          result={r}
+        />
+
+      ),
+
     },
 
+
     {
+
       id: "love",
+
       duration: 5500,
-      render: (r) => <LoveSlide result={r} />,
+
+      render: (r) => (
+
+        <LoveSlide
+          result={r}
+        />
+
+      ),
+
     },
 
+
     {
+
       id: "emoji",
+
       duration: 5000,
-      render: (r) => <EmojiSlide result={r} />,
+
+      render: (r) => (
+
+        <EmojiSlide
+          result={r}
+        />
+
+      ),
+
     }
+
   );
+
+
 
   if (photos.length > 0) {
+
     slides.push({
+
       id: "moments",
+
       duration: 5500,
-      render: () => <MomentsSlide photos={photos} />,
+
+      render: () => (
+
+        <MomentsSlide
+          photos={photos}
+        />
+
+      ),
+
     });
+
   }
+
+
 
   slides.push({
+
     id: "hourly",
+
     duration: 5000,
-    render: (r) => <HourlySlide result={r} />,
+
+    render: (r) => (
+
+      <HourlySlide
+        result={r}
+      />
+
+    ),
+
   });
 
-  const quizQuestions = buildQuizQuestions(result);
+
+
+  const quizQuestions =
+    buildQuizQuestions(result);
+
+
 
   if (quizQuestions.length > 0) {
+
+
     slides.push({
+
       id: "quiz-intro",
+
       duration: 2500,
-      render: () => <QuizIntroSlide />,
+
+      render: () => (
+
+        <QuizIntroSlide />
+
+      ),
+
     });
 
-    quizQuestions.forEach((question, i) => {
-      slides.push({
-        id: `quiz-${question.id}`,
 
-        // Aguarda o usuÃ¡rio responder.
-        duration: null,
+    quizQuestions.forEach(
+      (question, i) => {
 
-        render: () => (
-          <QuizSlide
-            question={question}
-            index={i}
-            total={quizQuestions.length}
-          />
-        ),
-      });
-    });
+
+        slides.push({
+
+          id: `quiz-${question.id}`,
+
+          duration: null,
+
+          render: () => (
+
+            <QuizSlide
+
+              question={question}
+
+              index={i}
+
+              total={
+                quizQuestions.length
+              }
+
+            />
+
+          ),
+
+        });
+
+
+      }
+    );
+
   }
-
   slides.push(
 
-{
-  id: "personality",
-  duration: 6000,
-  render: (r) => (
-    <PersonalitySlide result={r} />
-  ),
-},
+    {
 
-{
-  id: "awards",
-  duration: 6500,
-  render: (r) => (
-    <AwardsSlide result={r} />
-  ),
-},
+      id: "personality",
 
-{
-  id: "letter",
-  duration: null,
-  render: (r, onReset) => (
-    <LetterSlide
-      result={r}
-      onReset={onReset}
-    />
-  ),
-},
+      duration: 6000,
+
+      render: (r) => (
+
+        <PersonalitySlide
+          result={r}
+        />
+
+      ),
+
+    },
+
+
+    {
+
+      id: "awards",
+
+      duration: 6500,
+
+      render: (r) => (
+
+        <AwardsSlide
+          result={r}
+        />
+
+      ),
+
+    },
+
+
+    {
+
+      id: "letter",
+
+      duration: null,
+
+      render: (r) => (
+
+        <LetterSlide
+
+          result={r}
+
+          onReset={onReset}
+
+        />
+
+      ),
+
+    }
+
+
   );
 
+
+
   return slides;
+
 }
+
+
+
+
 
 const SWIPE_THRESHOLD = 40;
 
+
+
+
+
 export function Story({
+
   result,
+
   photos,
+
   relationshipStart = null,
+
   backgroundPhotoUrl = null,
+
   onExit,
+
   onReset,
+
 }: {
+
   result: AnalysisResult;
 
   photos: PhotoMoment[];
 
-  /**
-   * Opcional para nÃ£o quebrar telas que ainda
-   * nÃ£o enviam uma data de inÃ­cio.
-   */
   relationshipStart?: Date | null;
 
-  /**
-   * Opcional para permitir Story sem foto de fundo.
-   */
   backgroundPhotoUrl?: string | null;
 
   onExit: () => void;
 
   onReset: () => void;
+
 }) {
+
+
+
   const slides = useMemo(
+
     () =>
+
       buildSlides(
+
         result,
+
         photos,
-        relationshipStart
+
+        relationshipStart,
+
+        onReset
+
       ),
+
     [
+
       result,
+
       photos,
+
       relationshipStart,
+
+      onReset,
+
     ]
+
   );
 
-  const [index, setIndex] = useState(0);
 
-  const touchStartX = useRef<number | null>(
-    null
-  );
 
-  const touchStartY = useRef<number | null>(
-    null
-  );
+  const [index, setIndex] =
+    useState(0);
+
+
+
+  const touchStartX =
+    useRef<number | null>(null);
+
+
+
+  const touchStartY =
+    useRef<number | null>(null);
+
+
+
 
   const goNext = useCallback(() => {
-    setIndex((currentIndex) =>
+
+
+    setIndex((current) =>
+
       Math.min(
-        currentIndex + 1,
+
+        current + 1,
+
         slides.length - 1
+
       )
+
     );
+
+
   }, [slides.length]);
 
+
+
+
+
   const goPrev = useCallback(() => {
-    setIndex((currentIndex) =>
-      Math.max(currentIndex - 1, 0)
+
+
+    setIndex((current) =>
+
+      Math.max(
+
+        current - 1,
+
+        0
+
+      )
+
     );
+
+
   }, []);
 
-  /**
-   * AvanÃ§o automÃ¡tico.
-   *
-   * O timer Ã© recriado toda vez que o slide muda.
-   */
+
+
+
+
   useEffect(() => {
-    const currentSlide = slides[index];
 
-    if (!currentSlide) return;
 
-    const { duration } = currentSlide;
+    const currentSlide =
+      slides[index];
 
-    if (duration === null) return;
 
-    if (index === slides.length - 1) {
+
+    if (!currentSlide) {
       return;
     }
 
-    const timer = window.setTimeout(
-      goNext,
-      duration
-    );
+
+
+    if (
+      currentSlide.duration === null
+    ) {
+
+      return;
+
+    }
+
+
+
+    if (
+      index === slides.length - 1
+    ) {
+
+      return;
+
+    }
+
+
+
+    const timer =
+      window.setTimeout(
+
+        goNext,
+
+        currentSlide.duration
+
+      );
+
+
 
     return () => {
+
       window.clearTimeout(timer);
+
     };
+
+
   }, [
+
     index,
-    goNext,
+
     slides,
+
+    goNext,
+
   ]);
 
-  /**
-   * NavegaÃ§Ã£o pelo teclado.
-   */
+
+
+
+
   useEffect(() => {
+
+
     function handleKey(
       event: KeyboardEvent
     ) {
-      if (event.key === "ArrowRight") {
+
+
+      if (
+        event.key === "ArrowRight"
+      ) {
+
         goNext();
+
       }
 
-      if (event.key === "ArrowLeft") {
+
+
+      if (
+        event.key === "ArrowLeft"
+      ) {
+
         goPrev();
+
       }
 
-      if (event.key === "Escape") {
+
+
+      if (
+        event.key === "Escape"
+      ) {
+
         onExit();
+
       }
+
+
     }
+
+
 
     window.addEventListener(
+
       "keydown",
+
       handleKey
+
     );
+
+
 
     return () =>
+
       window.removeEventListener(
+
         "keydown",
+
         handleKey
+
       );
+
+
   }, [
+
     goNext,
+
     goPrev,
+
     onExit,
+
   ]);
 
-  /**
-   * Verifica se o clique aconteceu em algum elemento
-   * que possui interaÃ§Ã£o prÃ³pria.
-   *
-   * Isso Ã© especialmente importante para o Quiz,
-   * evitando que clicar em uma resposta tambÃ©m
-   * avance o Story.
-   */
   const isInteractiveElement = (
+
     target: EventTarget | null
+
   ) => {
+
+
     if (!(target instanceof HTMLElement)) {
+
       return false;
+
     }
+
+
 
     return Boolean(
+
       target.closest(
+
         [
+
           "button",
+
           "a",
+
           "input",
+
           "textarea",
+
           "select",
+
           "label",
+
           "[role='button']",
+
           "[data-story-interactive]",
+
         ].join(",")
+
       )
+
     );
+
   };
 
-  /**
-   * NavegaÃ§Ã£o semelhante aos Stories.
-   *
-   * 35% da esquerda = voltar.
-   * restante = avanÃ§ar.
-   */
+
+
+
+
+
   const handleContainerClick = (
+
     event: MouseEvent<HTMLDivElement>
+
   ) => {
+
+
+
     if (
-      isInteractiveElement(event.target)
+
+      isInteractiveElement(
+
+        event.target
+
+      )
+
     ) {
+
       return;
+
     }
+
+
+
 
     const rect =
-      event.currentTarget.getBoundingClientRect();
 
-    const ratio =
-      (event.clientX - rect.left) /
+      event.currentTarget
+
+        .getBoundingClientRect();
+
+
+
+
+    const position =
+
+      (
+
+        event.clientX -
+
+        rect.left
+
+      ) /
+
       rect.width;
 
-    if (ratio < 0.35) {
+
+
+
+
+    if (position < 0.35) {
+
       goPrev();
+
     } else {
+
       goNext();
+
     }
+
+
   };
 
-  /**
-   * Guarda a posiÃ§Ã£o inicial do toque.
-   */
+
+
+
+
+
   const handleTouchStart = (
+
     event: TouchEvent<HTMLDivElement>
+
   ) => {
-    const touch = event.touches[0];
+
+
+    const touch =
+      event.touches[0];
+
+
 
     touchStartX.current =
       touch.clientX;
 
+
+
     touchStartY.current =
       touch.clientY;
+
+
   };
 
-  /**
-   * Detecta swipe horizontal.
-   *
-   * TambÃ©m verifica o movimento vertical para
-   * evitar trocar de slide durante um scroll.
-   */
+
+
+
+
+
+
   const handleTouchEnd = (
+
     event: TouchEvent<HTMLDivElement>
+
   ) => {
+
+
     if (
+
       touchStartX.current === null ||
+
       touchStartY.current === null
+
     ) {
+
       return;
+
     }
+
+
+
+
 
     const touch =
       event.changedTouches[0];
 
+
+
+
     const deltaX =
+
       touch.clientX -
+
       touchStartX.current;
 
+
+
+
     const deltaY =
+
       touch.clientY -
+
       touchStartY.current;
 
+
+
+
+
     touchStartX.current = null;
+
     touchStartY.current = null;
 
-    /**
-     * Movimento predominantemente vertical.
-     * NÃ£o interpreta como swipe.
-     */
-    if (
-      Math.abs(deltaY) >
-      Math.abs(deltaX)
-    ) {
-      return;
-    }
+
+
+
 
     if (
-      Math.abs(deltaX) <
-      SWIPE_THRESHOLD
+
+      Math.abs(deltaY) >
+
+      Math.abs(deltaX)
+
     ) {
+
       return;
+
     }
+
+
+
+
+
+    if (
+
+      Math.abs(deltaX) <
+
+      SWIPE_THRESHOLD
+
+    ) {
+
+      return;
+
+    }
+
+
+
+
 
     if (deltaX < 0) {
+
       goNext();
+
     } else {
+
       goPrev();
+
     }
+
+
   };
+
+
+
+
+
 
   const currentSlide =
     slides[index];
 
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-0 backdrop-blur-md sm:p-6">
 
-      {/* ================================================= */}
-      {/* CONTAINER PRINCIPAL DO STORY                      */}
-      {/* ================================================= */}
+    <div
+      className={`
+        fixed
+        inset-0
+        z-50
+        flex
+        items-center
+        justify-center
+        bg-black/85
+        p-0
+        backdrop-blur-md
+        sm:p-6
+      `}
+    >
 
-      <div className="relative h-full w-full overflow-hidden bg-ink sm:h-[780px] sm:max-h-[90vh] sm:w-[390px] sm:rounded-[36px] sm:shadow-2xl sm:ring-1 sm:ring-paper/10">
 
-        {/* ================================================= */}
-        {/* FOTO DE FUNDO                                     */}
-        {/* ================================================= */}
+      <div
+        className={`
+          relative
+          h-full
+          w-full
+          overflow-hidden
+          bg-ink
+          sm:h-[780px]
+          sm:max-h-[90vh]
+          sm:w-[390px]
+          sm:rounded-[36px]
+          sm:shadow-2xl
+          sm:ring-1
+          sm:ring-paper/10
+        `}
+      >
 
-        {backgroundPhotoUrl && (
-          <div
-            className="absolute -inset-6 scale-110 bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${backgroundPhotoUrl})`,
-              animation:
-                "story-background-drift 16s ease-in-out infinite alternate",
-            }}
-          />
-        )}
 
-        {/* ================================================= */}
-        {/* FUNDO PADRÃƒO                                      */}
-        {/* ================================================= */}
-
-        {!backgroundPhotoUrl && (
-          <>
-            <div className="absolute inset-0 bg-ink" />
-
-            {/* Luz suave superior */}
-            <div
-              className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full opacity-20 blur-3xl"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(255,120,165,0.7), transparent 70%)",
-              }}
-            />
-
-            {/* Luz suave inferior */}
-            <div
-              className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full opacity-20 blur-3xl"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(186,120,255,0.65), transparent 70%)",
-              }}
-            />
-          </>
-        )}
-
-        {/* ================================================= */}
-        {/* OVERLAY DA FOTO                                   */}
-        {/* ================================================= */}
-
-        {backgroundPhotoUrl && (
-          <>
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(28,15,22,0.48) 0%, rgba(28,15,22,0.72) 42%, rgba(28,15,22,0.94) 100%)",
-              }}
-            />
+        {
+          backgroundPhotoUrl && (
 
             <div
-              className="pointer-events-none absolute inset-0"
+
+              className={`
+                absolute
+                -inset-6
+                scale-110
+                bg-cover
+                bg-center
+              `}
+
               style={{
-                background:
-                  "radial-gradient(circle at 50% 20%, rgba(255,255,255,0.08), transparent 50%)",
+                backgroundImage:
+                  `url(${backgroundPhotoUrl})`,
               }}
+
             />
-          </>
-        )}
 
-        {/* ================================================= */}
-        {/* BRILHOS DE FUNDO                                  */}
-        {/* ================================================= */}
+          )
+        }
 
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <span
-            className="absolute left-[12%] top-[20%] h-1 w-1 rounded-full bg-paper/70"
-            style={{
-              animation:
-                "story-sparkle 4s ease-in-out infinite",
-            }}
-          />
 
-          <span
-            className="absolute right-[17%] top-[34%] h-1.5 w-1.5 rounded-full bg-paper/50"
-            style={{
-              animation:
-                "story-sparkle 5.5s ease-in-out 1s infinite",
-            }}
-          />
-
-          <span
-            className="absolute bottom-[28%] left-[18%] h-1 w-1 rounded-full bg-paper/60"
-            style={{
-              animation:
-                "story-sparkle 6s ease-in-out 2s infinite",
-            }}
-          />
-
-          <span
-            className="absolute bottom-[18%] right-[12%] h-1 w-1 rounded-full bg-paper/40"
-            style={{
-              animation:
-                "story-sparkle 4.8s ease-in-out 0.5s infinite",
-            }}
-          />
-        </div>
-
-        {/* ================================================= */}
-        {/* BARRA DE PROGRESSO                                */}
-        {/* ================================================= */}
-
-        <div className="absolute inset-x-3 top-3 z-30 flex gap-1.5">
-          {slides.map(
-            (slide, slideIndex) => (
-              <div
-                key={slide.id}
-                className="h-1 flex-1 overflow-hidden rounded-full bg-paper/20 backdrop-blur-sm"
-              >
-                {slideIndex < index && (
-                  <div className="h-full w-full rounded-full bg-paper" />
-                )}
-
-                {slideIndex === index &&
-                  slide.duration !==
-                    null && (
-                    <div
-                      key={`${index}-${slide.id}`}
-                      className="h-full rounded-full bg-paper"
-                      style={{
-                        animation: `story-progress-fill ${slide.duration}ms linear forwards`,
-                      }}
-                    />
-                  )}
-
-                {slideIndex === index &&
-                  slide.duration ===
-                    null && (
-                    <div className="h-full w-full rounded-full bg-paper" />
-                  )}
-              </div>
-            )
-          )}
-        </div>
-
-        {/* ================================================= */}
-        {/* ÃUDIO                                             */}
-        {/* ================================================= */}
 
         <div
-          className="relative z-30"
-          data-story-interactive
+
+          className={`
+            absolute
+            inset-0
+          `}
+
+          style={{
+            background:
+              backgroundPhotoUrl
+
+                ? "linear-gradient(180deg, rgba(20,10,15,.45), rgba(20,10,15,.92))"
+
+                : "radial-gradient(circle at top, rgba(255,120,165,.25), transparent 40%)",
+          }}
+
+        />
+
+
+
+
+
+        <div
+          className={`
+            absolute
+            inset-x-3
+            top-3
+            z-30
+            flex
+            gap-1.5
+          `}
         >
-          <AudioController />
+
+          {
+            slides.map(
+              (slide, slideIndex) => (
+
+                <div
+
+                  key={slide.id}
+
+                  className={`
+                    h-1
+                    flex-1
+                    overflow-hidden
+                    rounded-full
+                    bg-paper/20
+                  `}
+
+                >
+
+                  {
+                    slideIndex < index && (
+
+                      <div
+                        className={`
+                          h-full
+                          w-full
+                          rounded-full
+                          bg-paper
+                        `}
+                      />
+
+                    )
+                  }
+
+
+                  {
+                    slideIndex === index && (
+
+                      <div
+                        className={`
+                          h-full
+                          w-full
+                          rounded-full
+                          bg-paper
+                        `}
+                      />
+
+                    )
+                  }
+
+
+                </div>
+
+              )
+            )
+          }
+
         </div>
 
-        {/* ================================================= */}
-        {/* FECHAR                                            */}
-        {/* ================================================= */}
+
+
+
+
+        <div
+
+          data-story-interactive
+
+          className={`
+            absolute
+            left-3
+            top-7
+            z-40
+          `}
+
+        >
+
+          <AudioController autoPlay />
+
+        </div>
+
+
+
+
 
         <button
+
           type="button"
-          onClick={onExit}
-          aria-label="Fechar retrospectiva"
+
           data-story-interactive
-          className="absolute right-3 top-7 z-40 flex h-8 w-8 items-center justify-center rounded-full bg-black/30 font-body text-lg text-paper backdrop-blur-md transition duration-200 hover:scale-110 hover:bg-black/50 active:scale-95"
+
+          onClick={onExit}
+
+          aria-label="Fechar"
+
+          className={`
+            absolute
+            right-3
+            top-7
+            z-40
+            flex
+            h-8
+            w-8
+            items-center
+            justify-center
+            rounded-full
+            bg-black/30
+            text-lg
+            text-paper
+          `}
+
         >
-          Ã—
+
+          ×
+
         </button>
 
-        {/* ================================================= */}
-        {/* CONTEÃšDO                                          */}
-        {/* ================================================= */}
+
+
+
+
+
 
         <div
-          className="relative z-10 h-full w-full"
+
+          className={`
+            relative
+            z-10
+            h-full
+            w-full
+          `}
+
           onClick={
             handleContainerClick
           }
+
           onTouchStart={
             handleTouchStart
           }
+
           onTouchEnd={
             handleTouchEnd
           }
+
         >
+
+
+
           <div
-            key={currentSlide.id}
-            className="relative h-full w-full pt-10"
-            style={{
-              animation:
-                "story-slide-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both",
-              willChange:
-                "transform, opacity, filter",
-            }}
+
+            key={
+              currentSlide.id
+            }
+
+            className={`
+              h-full
+              w-full
+              pt-10
+            `}
+
           >
-            {currentSlide.render(
-              result,
-              onReset
-            )}
+
+            {
+              currentSlide.render(
+                result,
+                onReset
+              )
+            }
+
+
           </div>
+
+
+
         </div>
 
-        {/* ================================================= */}
-        {/* VINHETA                                           */}
-        {/* ================================================= */}
 
-        <div
-          className="pointer-events-none absolute inset-0 z-20"
-          style={{
-            boxShadow:
-              "inset 0 -80px 100px rgba(0,0,0,0.16), inset 0 50px 80px rgba(0,0,0,0.12)",
-          }}
-        />
 
-        {/* ================================================= */}
-        {/* ANIMAÃ‡Ã•ES LOCAIS                                  */}
-        {/* ================================================= */}
 
-        <style jsx global>{`
-          @keyframes story-slide-enter {
-            0% {
-              opacity: 0;
-              transform: translateY(22px)
-                scale(0.97);
-              filter: blur(6px);
-            }
 
-            55% {
-              opacity: 1;
-            }
-
-            100% {
-              opacity: 1;
-              transform: translateY(0)
-                scale(1);
-              filter: blur(0);
-            }
-          }
-
-          @keyframes story-background-drift {
-            0% {
-              transform: scale(1.08)
-                translate3d(-1%, -1%, 0);
-            }
-
-            100% {
-              transform: scale(1.15)
-                translate3d(1.5%, 1%, 0);
-            }
-          }
-
-          @keyframes story-sparkle {
-            0%,
-            100% {
-              opacity: 0.2;
-              transform: scale(0.7);
-            }
-
-            45% {
-              opacity: 0.9;
-              transform: scale(1.5);
-            }
-
-            70% {
-              opacity: 0.45;
-              transform: scale(1);
-            }
-          }
-
-          @media (
-            prefers-reduced-motion:
-              reduce
-          ) {
-            [style*="story-slide-enter"],
-            [style*="story-background-drift"],
-            [style*="story-sparkle"] {
-              animation: none !important;
-            }
-          }
-        `}</style>
       </div>
+
+
+
+      <style jsx global>{`
+
+        @keyframes story-slide-enter {
+
+          from {
+
+            opacity:0;
+
+            transform:
+              translateY(20px)
+              scale(.98);
+
+          }
+
+
+          to {
+
+            opacity:1;
+
+            transform:
+              translateY(0)
+              scale(1);
+
+          }
+
+        }
+
+
+      `}</style>
+
+
     </div>
+
   );
+
 }
